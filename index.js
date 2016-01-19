@@ -18,7 +18,7 @@ function googleContactJsonToAtomXML(addContact,contactJson){
 
   //using the contact, create ATOM XML that can be submitted as a POST or PUT request to
   //https://www.google.com/m8/feeds/contacts/{user email}/full/{contact Id}";
-  var contactAtom = "valid XML atom update string";
+  var contactAtom = "valid XML atom contact create or update string";
 
   //return the string that can be POST-ed (if addContact is false) or PUT (if addContact is true) to the google API
   return contactAtom;
