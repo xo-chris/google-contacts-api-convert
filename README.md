@@ -10,7 +10,7 @@ Convert json received from google contacts api v3 to ATOM XML that can be submit
 
 <b>Background / more information</b>
 
-Envisaged use case for a developer using this module:
+Envisaged use case for a developer using this module:<br><br>
 -Developer wants to 'clone' a google contact from one user's google account to another, or to modify an existing contact<br>
 -A contact is obtained from a GET request to https://www.google.com/m8/feeds/contacts/{user email}/full/{contact Id}?alt=json (not in scope)<br>
 -This contact is maniupulated according to desired business value (not in scope)<br>
