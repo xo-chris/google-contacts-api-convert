@@ -1,6 +1,17 @@
 # google-contacts-api-convert
 Convert json received from google contacts api v3 to ATOM XML that can be submitted to the google contacts v3 api to create or update a contact
 
+<b>Usage</b>
+
+<code>
+//obtain desired google contact JSON
+
+var myConvert = require('google-contacts-api-convert');
+var myATOM = myConvert.googleContactJsonToAtomXML(true,googleContactJsonString);
+
+//submit myATOM to google contacts API
+</code>
+
 <b>To do:</b>
 
 <ul><li>Needs to be a proper module (so 'exports')</li>
