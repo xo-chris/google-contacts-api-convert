@@ -7,7 +7,7 @@ https://developers.google.com/google-apps/contacts/v3/reference
 */
 
 
-function googleContactJsonToAtomXML(addContact,contactJson){
+function googleContactJsonToAtomXML(addContact,contactJson,callback){
 
   //addContact is a boolean value, if true we are generating ATOM XML to add  a new contact
   //if addContact is false we are generating an ATOM XML string to update a contactJson
@@ -18,10 +18,10 @@ function googleContactJsonToAtomXML(addContact,contactJson){
 
   //using the contact, create ATOM XML that can be submitted as a POST or PUT request to
   //https://www.google.com/m8/feeds/contacts/{user email}/full/{contact Id}";
-  var contactAtom = "valid XML atom contact create or update string";
+  var contactAtom = "valid XML atom update string";
 
   //return the string that can be POST-ed (if addContact is false) or PUT (if addContact is true) to the google API
-  return contactAtom;
+  callback (null,contactAtom); //no error, pass null 
 
   
 }
