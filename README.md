@@ -4,7 +4,7 @@ node.js module to convert json received from a call to google contacts api v3 to
 <b>Usage (pseudo code)</b>
 
 <code>
-var googleContactJsonString = //make a call to Google API and obtain a contact
+//make a call to Google API and obtain a contact and store this in variable googleContactJsonString
 
 var myConvert = require('google-contacts-api-convert');
 myConvert.googleContactJsonToAtomXML(true,googleContactJsonString), function (error, myAtom) {
