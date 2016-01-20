@@ -17,7 +17,7 @@ myConvert.googleContactJsonToAtomXML(true,googleContactJsonString), function (er
 
 <ul><li>Needs to be a proper module (so 'exports')</li>
 <li>Needs the googleContactJsonToAtomXML method fully completed</li>
-<li>Needs testing (a test.js file is included to show what a basic test could look like</li>
+<li>Needs testing (a test.js file is included to show what a basic test could look like)</li>
 </ul>
 
 <b>Background / more information</b>
