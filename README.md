@@ -11,10 +11,6 @@ myConvert.googleContactJsonToAtomXML(true,googleContactJsonString), function (er
   //submit myATOM to google contacts API to add or update a contact
   }
 })
-
-
-
-
 </code>
 
 <b>To do:</b>
