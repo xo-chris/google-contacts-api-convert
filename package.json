@@ -1,0 +1,10 @@
+{
+	"name": "google-contacts-api-convert",
+	"version": "0.0.1",
+	"dependencies": {
+		"async": "*",
+		"google-contacts": "*",
+		"request": "*",
+		"xml2js": "*"
+	}
+}
