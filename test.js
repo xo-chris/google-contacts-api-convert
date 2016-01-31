@@ -1,68 +1,62 @@
-//test that our module works OK, this code has _not_ been use or tested,
-//provided to show a basic concept and some sample code to look at if it helps
+var convert = require('./converter.js');
+
+var error = require('./error.js'),
+	request = require('request'), // will perform the actual HTTP request for us
+	xml2js = require('xml2js');
+
+	// how many contacts should be read within a single request
+var maxContactsPerRequest = 100,
+	// the access token for reading the contacts
+	token = 'ya29.egK7ZqINDJ2Bk4BAI0bipXXx1hF-iJpRbljY5uwlLJY00DEqWLwLTZnXONqhjS69B08L';
+
+var responses = [];
 
 
-var id = '123abc'; //google contact id
-var token = 'secret'; //replace with valid auth token
-var userEmail = 'me@mydomain.com' //user email
-var url = "https://www.google.com/m8/feeds/contacts/" + userEmail + "/full/" + id +  "?alt=json";
+var requestPage = function(index, callback) {
+	// the request metadata
+	var options = {
+		// the endpoint and the following parameters:
+		//  alt=atom  the response from the google server will be written in ATOM XML instead of JSON. this will ease the conversion back into ATOM XML later
+		//  max-results=?  it is required for pagination to determine the maximum result length, and 1000 seemed as a good starting point as the result was (during test cases) 1MB to 1.5MB
+		url: 'https://www.google.com/m8/feeds/contacts/default/full/?alt=atom&max-results='+maxContactsPerRequest+'&start-index='+index,
+		headers: {
+			'Gdata-version': 3,
+			'Content-Length': 0,
+			'Authorization': 'Bearer '+token
+		}
+	};
 
-var request = require('request'); //use third party 'request' node module
+	// do the request and receive the response
+	request(options, function(err, response, body) {
+		if (err) return callback(err);
 
-//options to pass to our request
-var options =
-{
-  method: "GET",
-  gzip: true,
-  headers:  {'Authorization': "Bearer " + token,
-     'GData-Version': '3.0'}, //use version 3 of the API
-  url: url
-}
+		// add response body to list of responses
+		responses.push(body);
 
-//GET request to obtian contact data - which will be in JSON format
+		// convert XML to JSON, in order to check whether another API request is required
+		xml2js.parseString(body, function(err, result) {
+			if (err) return callback(err);
+			if (!result.feed.entry || result.feed.entry.length < this.maxContactsPerRequest) return callback(undefined, result);
 
-request(options, function(err, res, body) {
+			// request next page of contacts
+			requestPage(index+result.feed.entry.length, function(err, result2) {
+				if (err) return callback(err);
 
-  if (err){throw err;}
+				// concatenate resulting contact entries
+				result.feed.entry = result.feed.entry.concat(result2.feed.entry);
+				callback(undefined, result);
+			});
+		});
+	}.bind(this));
+}.bind(this);
 
-  if (res.statusCode != 200)
-      throw ("Server returns error: " + res.statusMessage);
+// start with requesting the first page - at index 1 (Contact API's indexes aren't zero-based)
+requestPage(1, function(err, result) {
+	if (err) return error(err);
 
-  var googleContactJsonString = body; //json contact response from google will be in the body returned
+	convert(responses, function(err) {
+		if (err) return error(err);
 
-  //.....make changes to contact as desired.....
-
-  //use our new functionality to get ATOM XML to submit
-  var myConvert = require('google-contacts-api-convert'); //so this is the new module we are writing
-  myConvert.googleContactJsonToAtomXML(true,googleContactJsonString), function (error, myAtom) {
-
-    //so now we have the ATOM XML we need to create a new google contact - eturned in myAtom variables
-    //we can now make the POST request to create a new google contact using ATOM XML returned from our new module
-   var url = "https://www.google.com/m8/feeds/contacts/" + userEmail + "/full/" + id;
-   var options =
-   {
-     method: "POST", //POST request creates a new contact - PUT would update an existing contact
-     gzip: true,
-     headers:  {'Authorization': "Bearer " + token,
-        'GData-Version': '3.0'}, //use version 3 of the API
-     url: url,
-     body:myAtom,//so we are using the XML returned from our new function to POST in the body
-   }
-
-   //fire away!
-   request(options, function(err, res, body) {
-
-      if (err){throw err;}
-
-      if (res.statusCode != '200')
-          throw ("Server returns error: " + res.statusMessage);
-
-      console.log("New contact created :-)");
-
-      console.log(body); //body will contain the google server response, including the id of the newly created contact
-
-     })
-
-  }
-
-})
+		console.log('Finished');
+	});
+}.bind(this));
