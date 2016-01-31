@@ -4,8 +4,11 @@ var error = require('./error.js'),
 	request = require('request'), // will perform the actual HTTP request for us
 	xml2js = require('xml2js');
 
+	// set this to "false" if you want to update the contacts, rather then creating them
+	// keep in mind that, for updating purposes, the contact has to already exist within the user account having the same id
+var adding = true,
 	// whether or not to log the response (which contains the list of read contacts), the result (which contains the batch xml code) and the status' (list of 4xx error messages upon creating/updating) shall be written into files
-var logging = false,
+	logging = false,
 	// how many contacts should be read within a single request (all contacts will become read, using pagination)
 	maxContactsPerRequest = 100,
 	// the access token for reading the contacts
@@ -62,7 +65,7 @@ requestPage(1, function(err, result) {
 	if (err) return error(err);
 
 	// convert it into an adding/updating batch request
-	convert(responses, function(err, result) {
+	convert(responses, adding, function(err, result) {
 		if (err) return error(err);
 
 		// logging
