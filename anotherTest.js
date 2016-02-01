@@ -5,12 +5,12 @@ var xml2js = require('xml2js');
 var async = require("async");
 
 //global variables
-var maxContacts = 10; //arbitrary number, I am just testing with two contacts
-var googleUser = "chris@exosphereapps.com"; //copy contacts from this user
-var token = "ya29.ewL9-6kO10a9xAstgS1ntTVkp3qDiPKQeSAsqBumjIRA3rwhu_g2O8s7yoJNdCu35vi_";
+var maxContacts = 100; //arbitrary number, I am just testing with two contacts
+var googleUser = "martin.bories@megatherium.solutions"; //copy contacts from this user
+var token = "ya29.ewKh6CRgYzc_TYiOG8LuETa-WXbdjO5x3zjlobla7RosVsMklwjmKjMGS9D18trqlmWq";
 
-var targetGoogleUser = "fred@exosphereapps.com"; //copy contacts to this user
-var targetToken = 'ya29.ewL_KFwrhL1ujAXAE26Ow5NXb0pAeiFTT9u6I3Ml7pAmAm62e76S4T6ERYV7T3jvHQZD3xGMu0n6NslsS8BfXhAYS-AivuPeQ1P8885UdYUK43PK1g';
+var targetGoogleUser = "test@megatherium.solutions"; //copy contacts to this user
+var targetToken = 'ya29.ewKh6CRgYzc_TYiOG8LuETa-WXbdjO5x3zjlobla7RosVsMklwjmKjMGS9D18trqlmWq';
 
 
 /*
@@ -43,7 +43,7 @@ function getContact(query,callback){
 
   console.log('getting contact');
   var url =  'https://www.google.com/m8/feeds/contacts/' + googleUser + '/full/?alt=atom&max-results='+maxContacts + '&q=' + query;
-
+  console.log(url);
   var options = {
     url: url,
     headers: {
@@ -89,7 +89,7 @@ function submitContact(parsedXML,callback){
 
   console.log("submitting " + parsedXML);
 
-  var url =  'https://www.google.com/m8/feeds/contacts/' + targetGoogleUser + '/full/';
+  var url =  'https://www.google.com/m8/feeds/contacts/' + targetGoogleUser + '/full/batch/';
 
   var options =
   {
@@ -106,8 +106,8 @@ function submitContact(parsedXML,callback){
 
     if (err){throw err;}
 
-    if (res.statusCode != "201")
-        throw ("response code was not 201 (created).  Received " + res.statusCode + " " + res.statusMessage);
+    if (res.statusCode != "200")
+        throw ("response code was not 200 (OK).  Received " + res.statusCode + " " + res.statusMessage);
 
     console.log("got response " + res.statusCode + ":" + res.statusMessage)
 
