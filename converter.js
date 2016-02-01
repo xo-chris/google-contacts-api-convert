@@ -37,7 +37,7 @@ var getContactsAsXml = function(responses, adding, callback) {
 		}
 
 		// loop through the entries
-		for (var i = 0; i < result.feed.entry.length; ++i) {
+		if (result.feed.entry) for (var i = 0; i < result.feed.entry.length; ++i) {
 			// delete the group information - as discussed within Freelancer.com chat
 			delete result.feed.entry[i]['gContact:groupMembershipInfo'];
 
@@ -76,9 +76,8 @@ var getContactsAsXml = function(responses, adding, callback) {
 			if (!result) result = result2;
 				// skip response if it does not contain any entries
 			else if (!result2.feed.entry || result2.feed.entry.length == 0) return next();
-
-			// gather feed entries in one list
-			result.feed.entry = result.feed.entry.concat(result2.feed.entry);
+				// gather feed entries in one list
+			else result.feed.entry = result.feed.entry.concat(result2.feed.entry);
 			next();
 		});
 	}, function(err) {
