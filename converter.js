@@ -1,3 +1,15 @@
+function deepCopy(original, excludes) {
+	if (!excludes) excludes = [];
+	if (typeof original === 'string' || original instanceof String || original instanceof Number) return original;
+
+	var copy = {};
+	for (var name in original)
+		if (original.hasOwnProperty(name) && excludes.indexOf(name) < 0)
+			copy[name] = deepCopy(original[name], excludes);
+
+	return copy;
+}
+
 /**
  * Creates an ATOM XML batch request out of an ATOM XML document for the Contacts API.
  *
@@ -5,8 +17,8 @@
  * @param adding	Boolean	optional; true determines that the XML document will be prepared for adding contacts, false determines the document to update contacts
  *							default: true
  * @param callback	Function	gets called after all the contacts have been fetched and the XML document was created
- *								receives an exception as first parameter (or an error-describing XML response from the Google API) if something fails, and otherwise receives the final XML document as the second parameter as a String
- *								callback(err, xml)
+ *								receives an exception as first parameter (or an error-describing XML response from the Google API) if something fails, and otherwise receives the final XML documents as the second parameter as an Array of Strings, each containing a single batch request body
+ *								callback(err, [xml])
  */
 var getContactsAsXml = function(responses, adding, callback) {
 	// make "responses" an array
@@ -46,20 +58,38 @@ var getContactsAsXml = function(responses, adding, callback) {
 			result.feed.entry[i]['batch:operation'] = {'$': {type: adding ? 'insert' : 'update'}}; // the $ simply means, that "type" will be an attribute to the "batch:operation"-element, and not a child
 		}
 
+		console.log(result.feed.entry.length);
+
+		// split results
+		var results = [];
+		for (var i = 0; i < result.feed.entry.length; ++i) {
+			var arrayIndex = parseInt(i / 100);
+			if (!results[arrayIndex]) {
+				results[arrayIndex] = deepCopy(result, ['entry']);
+				results[arrayIndex].feed.entry = [];
+			}
+			results[arrayIndex].feed.entry.push(result.feed.entry[i]);
+		}
+
 		// add attributes to the root element in order to link to schemes correctly
-		result.feed['$'] = {
-			xmlns: 'http://www.w3.org/2005/Atom',
-			'xmlns:gContact': 'http://schemas.google.com/contact/2008',
-			'xmlns:gd': 'http://schemas.google.com/g/2005',
-			'xmlns:batch': 'http://schemas.google.com/gdata/batch'
-		};
+		for (var i = 0; i < results.length; ++i) {
+			results[i].feed['$'] = {
+				xmlns: 'http://www.w3.org/2005/Atom',
+				'xmlns:gContact': 'http://schemas.google.com/contact/2008',
+				'xmlns:gd': 'http://schemas.google.com/g/2005',
+				'xmlns:batch': 'http://schemas.google.com/gdata/batch'
+			};
+		}
 
 		// convert the gathered JSON object back to XML
 		var builder = new xml2js.Builder();
-		var xml = builder.buildObject(result);
+
+		for (var i = 0; i < results.length; ++i) {
+			results[i] = builder.buildObject(results[i]);
+		}
 
 		// call callback
-		callback(undefined, xml);
+		callback(undefined, results);
 	}
 
 	// will gather entry information

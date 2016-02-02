@@ -1,16 +1,15 @@
 
 //modules required
 var request = require("request");
-var xml2js = require('xml2js');
 var async = require("async");
 
 //global variables
-var maxContacts = 100; //arbitrary number, I am just testing with two contacts
-var googleUser = "martin.bories@megatherium.solutions"; //copy contacts from this user
-var token = "ya29.ewKh6CRgYzc_TYiOG8LuETa-WXbdjO5x3zjlobla7RosVsMklwjmKjMGS9D18trqlmWq";
+var maxContacts = 1000; //arbitrary number, I am just testing with two contacts
+var googleUser = "martin.christian.bories@gmail.com"; //copy contacts from this user
+var token = "ya29.fAJEttiN78mlqjyYSIRUd1g3DQUCsUhDJHJWFvJpmEaMm3Y3fY7qA_VhK5wC2kG-V5Qy";
 
-var targetGoogleUser = "test@megatherium.solutions"; //copy contacts to this user
-var targetToken = 'ya29.ewKh6CRgYzc_TYiOG8LuETa-WXbdjO5x3zjlobla7RosVsMklwjmKjMGS9D18trqlmWq';
+var targetGoogleUser = "test.martin.bories@gmail.com"; //copy contacts to this user
+var targetToken = 'ya29.fAJuAvyTegWZZns7DP_CHgRhQe97uLIimtqY-bC2XKeSITHWtSnzsl2MOnBQndoC9rPk';
 
 
 /*
@@ -24,7 +23,7 @@ what actually happens (for me): the parsed XML contains three <entry> nodes (I w
 TODO:  write an 'update contacts' function that would get all contacts with 'xo_sync' present, modify them e.g. change the name and then submit
 the update back to the api - this will test that the update syntax returned is correct
 */
-addContacts("xo_sync");
+addContacts("");
 
 
 function addContacts(query){
@@ -60,7 +59,7 @@ function getContact(query,callback){
     if (response.statusCode != "200")
     throw ("response code from " + url + " was not 200.  Received " + res.statusCode + " " + res.statusMessage);
 
-    console.log("GOT CONTACTS OK " + body);
+    //console.log("GOT CONTACTS OK " + body);
 
     callback(null,body);
 
@@ -70,7 +69,7 @@ function getContact(query,callback){
 
 function convertContact(XML,callback){
 
-  console.log('converting ' + XML);
+  //console.log('converting ' + XML);
 
   var convert = require('./converter.js');
 
@@ -85,36 +84,41 @@ function convertContact(XML,callback){
 
 }
 
-function submitContact(parsedXML,callback){
+function submitContact(parsedXMLs,callback){
 
-  console.log("submitting " + parsedXML);
+  //console.log("submitting " + parsedXML);
 
-  var url =  'https://www.google.com/m8/feeds/contacts/' + targetGoogleUser + '/full/batch/';
+  async.eachSeries(parsedXMLs, function(parsedXML, next) {
+    var url =  'https://www.google.com/m8/feeds/contacts/' + targetGoogleUser + '/full/batch/';
 
-  var options =
-  {
-    method: "POST",
-    gzip: true,
-    headers:  {'Authorization': "Bearer " + targetToken,
-              'Content-Type': 'application/atom+xml',
-              'GData-Version': '3.0'},
-    body:parsedXML,
-    url: url
-  }
+    var options =
+    {
+      method: "POST",
+      gzip: true,
+      headers:  {'Authorization': "Bearer " + targetToken,
+                'Content-Type': 'application/atom+xml',
+                'GData-Version': '3.0'},
+      body:parsedXML,
+      url: url
+    }
 
-  request(options, function(err, res, body) {
+    request(options, function(err, res, body) {
 
-    if (err){throw err;}
+      if (err)return next(err);
 
-    if (res.statusCode != "200")
-        throw ("response code was not 200 (OK).  Received " + res.statusCode + " " + res.statusMessage);
+      if (res.statusCode != "200")
+          return next ("response code was not 200 (OK).  Received " + res.statusCode + " " + res.statusMessage);
 
-    console.log("got response " + res.statusCode + ":" + res.statusMessage)
+      console.log("got response " + res.statusCode + ":" + res.statusMessage)
 
-    console.log("CONTACT CREATED.  " + body);
+      //console.log("CONTACT CREATED.  " + body);
 
-    callback(null);
+      next(null);
 
+    });
+  }, function(err) {
+    if (err) throw err;
+      console.log('FINISHED everything!');
   });
 
 }
