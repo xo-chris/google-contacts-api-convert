@@ -45,7 +45,7 @@ function getContact(query,callback){
 
   console.log('getting contacts...');
   var url =  'https://www.google.com/m8/feeds/contacts/' + googleUser + '/full/?alt=atom&max-results='+maxContacts + '&q=' + query;
-  console.log(url);
+
   var options = {
     url: url,
     headers: {
