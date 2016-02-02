@@ -39,6 +39,10 @@ var getContactsAsXml = function(responses, adding, callback) {
 	var parsingDone = function(err, result) {
 		if (err) return callback(err);
 
+		//cannot parse if no contacts present in the feed
+		if (result.feed.entry===undefined)
+			return callback (Error ("Please provide one or more contacts to convert"));
+
 		// traverse through all results, to clear them from any elements not containing the entrys (like response metadata)
 		for (var name in result.feed) {
 			// clear all elements except for entries
@@ -47,6 +51,7 @@ var getContactsAsXml = function(responses, adding, callback) {
 				continue;
 			}
 		}
+
 
 		// loop through the entries
 		if (result.feed.entry) for (var i = 0; i < result.feed.entry.length; ++i) {
@@ -57,8 +62,6 @@ var getContactsAsXml = function(responses, adding, callback) {
 			result.feed.entry[i]['batch:id'] = adding ? 'create' : 'update'; // create a "batch:id"-element, containing the text "create" or "update"
 			result.feed.entry[i]['batch:operation'] = {'$': {type: adding ? 'insert' : 'update'}}; // the $ simply means, that "type" will be an attribute to the "batch:operation"-element, and not a child
 		}
-
-		console.log(result.feed.entry.length);
 
 		// split results
 		var results = [];
