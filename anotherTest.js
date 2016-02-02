@@ -1,32 +1,35 @@
 
-//modules required
+//modules required to run tests
 var request = require("request");
 var async = require("async");
+var xml2js = require('xml2js');
 
 //global variables
-var maxContacts = 1000; //arbitrary number, I am just testing with two contacts
-var googleUser = "martin.christian.bories@gmail.com"; //copy contacts from this user
-var token = "ya29.fAJEttiN78mlqjyYSIRUd1g3DQUCsUhDJHJWFvJpmEaMm3Y3fY7qA_VhK5wC2kG-V5Qy";
+var maxContacts = 1000; //maximum contacts to update.  Set to a very large number like 999999 to update all contacts
+var isUpdate = false;
 
-var targetGoogleUser = "test.martin.bories@gmail.com"; //copy contacts to this user
-var targetToken = 'ya29.fAJuAvyTegWZZns7DP_CHgRhQe97uLIimtqY-bC2XKeSITHWtSnzsl2MOnBQndoC9rPk';
+//set the google user and target user and their tokens to test
 
+var googleUser = "me@gmail.com"; //copy contacts from this user
+var token = "";//oAuth token, you can get this from somewhere like Google oAuth Playground
 
-/*
-add all contacts with 'xo_sync' present in a field e.g. in a custom field
+var targetGoogleUser = "someoneelse@gmail.com"; //copy contacts to this user
+var targetToken = '';
 
-expected result:  I have two contacts with 'xo_sync' present.  I would expect both contacts to be added to the target google user's contacts
+testContacts("",false); //add all contacts from googleUser to contacts of targetGoogleUser;
 
-what actually happens (for me): the parsed XML contains three <entry> nodes (I would expect two) and a single, blank contact is added to the target user's contacts
+//some other tests that can be runn
+//testContacts("sync_me",false); //add all contacts with 'sync_me' in any field
+//testContacts("sync_me",true); //update all contacts with 'sync_me' in any field (modify the contact note)
 
+function testContacts(query,isAnUpdate){
 
-TODO:  write an 'update contacts' function that would get all contacts with 'xo_sync' present, modify them e.g. change the name and then submit
-the update back to the api - this will test that the update syntax returned is correct
-*/
-addContacts("");
+  if (isAnUpdate){
+    isUpdate = true;
+    googleUser = targetGoogleUser;
+    token = targetToken;
+  }
 
-
-function addContacts(query){
   async.waterfall([
     getContact.bind(null,query),
     convertContact,
@@ -40,7 +43,7 @@ function addContacts(query){
 
 function getContact(query,callback){
 
-  console.log('getting contact');
+  console.log('getting contacts...');
   var url =  'https://www.google.com/m8/feeds/contacts/' + googleUser + '/full/?alt=atom&max-results='+maxContacts + '&q=' + query;
   console.log(url);
   var options = {
@@ -59,7 +62,7 @@ function getContact(query,callback){
     if (response.statusCode != "200")
     throw ("response code from " + url + " was not 200.  Received " + res.statusCode + " " + res.statusMessage);
 
-    //console.log("GOT CONTACTS OK " + body);
+    console.log("GOT CONTACTS OK " + body);
 
     callback(null,body);
 
@@ -69,18 +72,54 @@ function getContact(query,callback){
 
 function convertContact(XML,callback){
 
-  //console.log('converting ' + XML);
+  if (isUpdate)
+    convertContactForEdit(XML,callback);
+  else {
+    convertContactForAdd(XML,callback);
+  }
 
+}
+
+function convertContactForAdd(XML,callback){
+
+  //call convert function
   var convert = require('./converter.js');
 
-  var aXML = [];
-  aXML.push(XML) //so we can pass in an array.  Not sure if I am using the convert function correctly here??
-  convert(aXML, function(err,response) {
+  convert(XML, function(err,response) {
 
-    if (err) return error(err);
+    if (err) throw err;
 
     callback(null,response);
   });
+
+}
+
+function convertContactForEdit(XML,callback){
+
+  //make a small change to the contact notes so we can tell this was edited
+	xml2js.parseString(XML, function(err, json) {
+
+    for (var i=0;i<json.feed.entry.length;i++){
+
+        var note =  (json.feed.entry[i].content ===undefined)?"": json.feed.entry[i].content;
+        note += " MODIFIED BY TEST";
+        json.feed.entry[i].content  = note;
+    }
+
+    var builder = new xml2js.Builder();
+    XML = builder.buildObject(json);
+
+    var convert = require('./converter.js');
+
+    convert(XML, false,function(err,response) {
+
+      if (err) return error(err);
+
+      callback(null,response);
+    });
+
+  });
+
 
 }
 
@@ -88,6 +127,8 @@ function submitContact(parsedXMLs,callback){
 
   //console.log("submitting " + parsedXML);
 
+  //our 'convert' function has returned an array of ATOM XML to submit to the server
+  //iterate through this array submitting batch changes to the server
   async.eachSeries(parsedXMLs, function(parsedXML, next) {
     var url =  'https://www.google.com/m8/feeds/contacts/' + targetGoogleUser + '/full/batch/';
 
@@ -109,7 +150,7 @@ function submitContact(parsedXMLs,callback){
       if (res.statusCode != "200")
           return next ("response code was not 200 (OK).  Received " + res.statusCode + " " + res.statusMessage);
 
-      console.log("got response " + res.statusCode + ":" + res.statusMessage)
+      console.log("Contact batch submitted.  Server response: " + res.statusCode + ":" + res.statusMessage)
 
       //console.log("CONTACT CREATED.  " + body);
 
