@@ -1,10 +1,16 @@
 {
 	"name": "google-contacts-api-convert",
-	"version": "0.0.1",
+	"description" : "Convert  XML from a GET request to Google contacts API into XML that can be POSTed back to the google API to create or update contacts",
+	"author": "Chris Lennon - exosphereapps.com",
+	"license": "MIT",
+	"version": "0.4.0",
 	"dependencies": {
 		"async": "*",
-		"google-contacts": "*",
 		"request": "*",
 		"xml2js": "*"
-	}
+	},
+	"repository": {
+  "type": "git",
+  "url": "https://github.com/xo-chris/google-contacts-api-convert.git"
+},
 }
