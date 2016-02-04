@@ -8,19 +8,21 @@ var xml2js = require('xml2js');
 var maxContacts = 1000; //maximum contacts to update.    Set to a very large number like 999999 to update all  contacts.
 var isUpdate = false;
 
-//set the google user and target user and their tokens to test
+//set the google user and target user and their tokens
 
 var googleUser = "me@gmail.com"; //copy contacts from this user
 var token = "";//oAuth token, you can get this from somewhere like Google oAuth Playground
 
 var targetGoogleUser = "someoneelse@gmail.com"; //copy contacts to this user
-var targetToken = '';
+var targetToken = "";
 
-testContacts("",false); //add all contacts from googleUser to contacts of targetGoogleUser;
+
+testContacts("group:6"); //group Id 6 is 'My Contacts' so this will transfer all contacts in 'My Contacts' from the googleUser to the targetGoogleUser
 
 //some other tests that can be runn
+//testContacts("",false); //add all contacts from googleUser to contacts of targetGoogleUser;
 //testContacts("sync_me",false); //add all contacts with 'sync_me' in any field
-//testContacts("sync_me",true); //update all contacts with 'sync_me' in any field (modify the contact note)
+//testContacts("sync_me",true); //update all contacts with 'sync_me' in any field
 
 function testContacts(query,isAnUpdate){
 
@@ -33,7 +35,7 @@ function testContacts(query,isAnUpdate){
   async.waterfall([
     getContact.bind(null,query),
     convertContact,
-    submitContact
+   submitContact
   ],
   // this gets called at the end
   function( err){
@@ -44,7 +46,17 @@ function testContacts(query,isAnUpdate){
 function getContact(query,callback){
 
   console.log('getting contacts...');
-  var url =  'https://www.google.com/m8/feeds/contacts/' + googleUser + '/full/?alt=atom&max-results='+maxContacts + '&q=' + query;
+
+  var url =  'https://www.google.com/m8/feeds/contacts/' + googleUser + '/full/?alt=atom&max-results='+maxContacts
+  if (query.startsWith("group"))
+  {
+    //get all contacts with the specified group id
+    var groupId = query.split(":")[1];
+    var groupUri = "https://www.google.com/m8/feeds/groups/" + googleUser + "/base/" + groupId;
+    url +="&group=" + groupUri;
+  }
+  else
+    url+= '&q=' + query;
 
   var options = {
     url: url,
@@ -60,9 +72,9 @@ function getContact(query,callback){
     if (err) return callback(err);
 
     if (response.statusCode != "200")
-    throw ("response code from " + url + " was not 200.  Received " + res.statusCode + " " + res.statusMessage);
+    throw ("response code from " + url + " was not 200.  Received " + response.statusCode + " " + response.statusMessage + " " + body);
 
-    console.log("GOT CONTACTS OK " + body);
+  //  console.log("GOT CONTACTS OK " + body);
 
     callback(null,body);
 
@@ -148,7 +160,7 @@ function submitContact(parsedXMLs,callback){
       if (err)return next(err);
 
       if (res.statusCode != "200")
-          return next ("response code was not 200 (OK).  Received " + res.statusCode + " " + res.statusMessage);
+          return next ("response code was not 200 (OK).  Received " + res.statusCode + " " + res.statusMessage + " " + body);
 
       console.log("Contact batch submitted.  Server response: " + res.statusCode + ":" + res.statusMessage)
 
