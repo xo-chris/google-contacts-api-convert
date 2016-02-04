@@ -5,7 +5,7 @@ var async = require("async");
 var xml2js = require('xml2js');
 
 //global variables
-var maxContacts = 1000; //maximum contacts to update.  Set to a very large number like 999999 to update all contacts.
+var maxContacts = 1000; //maximum contacts to update.  Set to a very large number like 999999 to update all contacts
 var isUpdate = false;
 
 //set the google user and target user and their tokens to test
