@@ -2,22 +2,11 @@
 
 ## Usage
 
-    var Converter = require('google-contacts-api-convert');
-    var converter = new Converter('your-access-token');
+    var convert = require('google-contacts-api-convert');
 
-    // receiving the BATCH creation document
-    converter.getContactsAsXml(function(err, xml) {
-    	if (err) throw err;
-
-    	console.log(xml);
-    });
-
-    // receiving the BATCH update document
-    converter.getContactsAsXml(false, function(err, xml) {
-    	if (err) throw err;
-
-    	console.log(xml);
-    });
+    convert('xmlReceuvedFromGoogleContactsAPI',function(err,response) {
+    console.log ("submit this XML back to Google contacts API to create a contact " + response);
+});
 
 ## Notes
 
