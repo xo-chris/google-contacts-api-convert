@@ -6,7 +6,7 @@
 
     convert('xmlReceuvedFromGoogleContactsAPI',function(err,response) {
     console.log ("submit this XML back to Google contacts API to create a contact " + response);
-});
+    });
 
 ## Notes
 
