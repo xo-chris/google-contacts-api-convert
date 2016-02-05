@@ -95,7 +95,7 @@ function convertContact(XML,callback){
 function convertContactForAdd(XML,callback){
 
   //call convert function
-  var convert = require('./converter.js');
+  var convert = require('./index.js');
 
   convert(XML, function(err,response) {
 
