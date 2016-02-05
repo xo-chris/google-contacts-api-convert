@@ -10,7 +10,5 @@
 
 ## Notes
 
- - the converter fetches ALL contacts of the given user, no matter what size
- - everything was successfully tested with 830 contacts
- - the converter puts all contacts into one resulting batch document, BUT google contacts api only accepts up to 100 contacts within a single batch request
- - the `error.js`-file is used as a simple error handler. just to unify exception catching & logging
+ - Includes 'tests.js' which includes code to GET xml from google contacts API, transform it and submit is back to google contacts API to create and modify contacts
+ - Tested with google contacts API V3 https://developers.google.com/google-apps/contacts/v3/reference Code may work with versions 1 or 2 but has not been tested
